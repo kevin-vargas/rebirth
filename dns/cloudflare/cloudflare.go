@@ -15,7 +15,7 @@ type dnsI struct {
 	token string
 }
 
-func (d *dnsI) Update(ctx context.Context, ip string) error {
+func (d *dnsI) Update(ctx context.Context, ip string, ops dns.DNSOps) error {
 	api, err := cloudflare.NewWithAPIToken(d.token)
 	if err != nil {
 		return err
@@ -38,6 +38,7 @@ func (d *dnsI) Update(ctx context.Context, ip string) error {
 		for _, record := range r {
 			if record.Comment == update_tag {
 				_, err := api.UpdateDNSRecord(ctx, zoneID, cloudflare.UpdateDNSRecordParams{
+					Proxied: &ops.Proxied,
 					ID:      record.ID,
 					Content: ip,
 				})

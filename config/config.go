@@ -7,14 +7,20 @@ import (
 
 const (
 	cloudflare_api_token = "cloudflare_api_token"
+	redis_address        = "redis_address"
+	redis_password       = "redis_password"
 )
 
 type Config struct {
+	RedisAddress       string
+	RedisPassword      string
 	CloudflareAPIToken string
 }
 
 func Make() Config {
 	defaults := map[string]any{
+		redis_address:        "localhost",
+		redis_password:       "",
 		cloudflare_api_token: "",
 	}
 
@@ -24,6 +30,8 @@ func Make() Config {
 		}
 	}
 	return Config{
+		RedisAddress:       defaults[redis_address].(string),
+		RedisPassword:      defaults[redis_password].(string),
 		CloudflareAPIToken: defaults[cloudflare_api_token].(string),
 	}
 }
