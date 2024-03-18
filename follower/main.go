@@ -1,45 +1,21 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	_ "embed"
 	"errors"
-	"net/http"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/kevin-vargas/rebirth/alive"
 	"github.com/kevin-vargas/rebirth/alive/ping"
-	"github.com/kevin-vargas/rebirth/config"
 	"github.com/kevin-vargas/rebirth/db"
 	"github.com/kevin-vargas/rebirth/db/redis"
 	"github.com/kevin-vargas/rebirth/dns"
 	"github.com/kevin-vargas/rebirth/dns/cloudflare"
+	"github.com/kevin-vargas/rebirth/follower/config"
 	"github.com/kevin-vargas/rebirth/ip"
 	"github.com/kevin-vargas/rebirth/ip/public"
 )
-
-//go:embed index.html
-var indexTemplate []byte
-
-var (
-	URI_TOKEN = []byte(`${{uri}}`)
-)
-
-func runServer() error {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		index := bytes.ReplaceAll(indexTemplate, URI_TOKEN, []byte(r.URL.String()))
-		w.Header().Set("Content-Type", "text/html")
-		w.WriteHeader(http.StatusServiceUnavailable)
-		w.Write(index)
-	})
-
-	if err := http.ListenAndServe(":3333", mux); err != nil {
-		return err
-	}
-	return nil
-}
 
 type manager struct {
 	db db.DB
@@ -104,10 +80,10 @@ const (
 )
 
 func main() {
-	go runServer()
 	godotenv.Load()
-	ctx := context.Background()
 	cfg := config.Make()
+
+	ctx := context.Background()
 	d := cloudflare.New(cfg.CloudflareAPIToken)
 	db := redis.New(
 		cfg.RedisAddress,
@@ -126,14 +102,16 @@ func main() {
 		i:  i,
 		d:  d,
 	}
-	n, err := m.needToTakeControll(ctx)
-	if err != nil {
-		panic(err)
-	}
-	if n {
-		err := m.takeControll(ctx)
+	for range time.Tick(cfg.Period) {
+		n, err := m.needToTakeControll(ctx)
 		if err != nil {
 			panic(err)
+		}
+		if n {
+			err := m.takeControll(ctx)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 }

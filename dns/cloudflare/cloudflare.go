@@ -2,13 +2,16 @@ package cloudflare
 
 import (
 	"context"
+	"strings"
 
 	"github.com/cloudflare/cloudflare-go"
 	"github.com/kevin-vargas/rebirth/dns"
 )
 
 const (
-	update_tag = "rebirth-ip"
+	update_tag             = "rebirth-ip"
+	update_tag_proxied     = "rebirth-ip-proxied"
+	update_tag_non_proxied = "rebirth-ip-non-proxied"
 )
 
 type dnsI struct {
@@ -36,9 +39,16 @@ func (d *dnsI) Update(ctx context.Context, ip string, ops dns.DNSOps) error {
 			return err
 		}
 		for _, record := range r {
-			if record.Comment == update_tag {
+			if strings.Contains(record.Comment, update_tag) {
+				isProxied := ops.Proxied
+				switch record.Comment {
+				case update_tag_non_proxied:
+					isProxied = false
+				case update_tag_proxied:
+					isProxied = true
+				}
 				_, err := api.UpdateDNSRecord(ctx, zoneID, cloudflare.UpdateDNSRecordParams{
-					Proxied: &ops.Proxied,
+					Proxied: &isProxied,
 					ID:      record.ID,
 					Content: ip,
 				})
