@@ -7,5 +7,6 @@ type DNSOps struct {
 }
 
 type DNS interface {
+	UpdateSingle(context.Context, string, string, string, DNSOps) error
 	Update(context.Context, string, DNSOps) error
 }

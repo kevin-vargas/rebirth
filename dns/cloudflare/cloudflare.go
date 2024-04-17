@@ -18,6 +18,39 @@ type dnsI struct {
 	token string
 }
 
+func (d *dnsI) UpdateSingle(ctx context.Context, ip, url, zone string, ops dns.DNSOps) error {
+	api, err := cloudflare.NewWithAPIToken(d.token)
+	if err != nil {
+		return err
+	}
+	zoneID, err := api.ZoneIDByName(zone)
+	if err != nil {
+		return err
+	}
+	cZoneID := cloudflare.ZoneIdentifier(zoneID)
+	r, _, err := api.ListDNSRecords(
+		ctx,
+		cZoneID,
+		cloudflare.ListDNSRecordsParams{
+			Name: url,
+		},
+	)
+	if err != nil {
+		return err
+	}
+	for _, record := range r {
+		_, err := api.UpdateDNSRecord(ctx, cZoneID, cloudflare.UpdateDNSRecordParams{
+			Proxied: &ops.Proxied,
+			ID:      record.ID,
+			Content: ip,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (d *dnsI) Update(ctx context.Context, ip string, ops dns.DNSOps) error {
 	api, err := cloudflare.NewWithAPIToken(d.token)
 	if err != nil {

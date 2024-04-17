@@ -8,11 +8,11 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kevin-vargas/rebirth/alive"
 	"github.com/kevin-vargas/rebirth/alive/ping"
+	"github.com/kevin-vargas/rebirth/components/follower/config"
 	"github.com/kevin-vargas/rebirth/db"
 	"github.com/kevin-vargas/rebirth/db/redis"
 	"github.com/kevin-vargas/rebirth/dns"
 	"github.com/kevin-vargas/rebirth/dns/cloudflare"
-	"github.com/kevin-vargas/rebirth/follower/config"
 	"github.com/kevin-vargas/rebirth/ip"
 	"github.com/kevin-vargas/rebirth/ip/public"
 )
